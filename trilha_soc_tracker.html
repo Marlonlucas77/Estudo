@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trilha SOC — Meu Progresso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0e1a;--surface:#111827;--surface2:#1a2234;--surface3:#1e2a40;
+    --border:#1f2d45;--border2:#2a3d5c;
+    --accent:#00d4aa;--accent2:#0ea5e9;--accent3:#8b5cf6;--accent4:#f59e0b;
+    --text:#e2e8f0;--text2:#94a3b8;--text3:#4a5568;
+    --green:#10b981;--green-bg:#0d2e22;--green-border:#134e38;
+    --red:#e24b4a;--red-bg:#2a0f0f;
+    --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+    --r:8px;--r2:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.6}
+  a{color:var(--accent2);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* HEADER */
+  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;gap:12px;height:60px;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+  .logo{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+  .logo span{color:var(--text2);font-weight:400}
+  .header-mid{display:flex;align-items:center;gap:8px;margin-left:8px}
+  .sync-indicator{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--text3);padding:4px 10px;border-radius:20px;border:1px solid var(--border);transition:all .3s}
+  .sync-indicator.ok{color:var(--green);border-color:var(--green-border);background:var(--green-bg)}
+  .sync-indicator.syncing{color:var(--accent2);border-color:#1a4a6e;background:#0c2d4a}
+  .sync-indicator.error{color:var(--red);border-color:#4a1a1a;background:var(--red-bg)}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+  .sync-dot.pulse{animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .header-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .hbtn{font-family:var(--mono);font-size:11px;color:var(--text3);background:transparent;border:1px solid var(--border);border-radius:var(--r);padding:5px 12px;cursor:pointer;transition:all .2s;letter-spacing:.04em;white-space:nowrap}
+  .hbtn:hover{color:var(--text2);border-color:var(--border2)}
+  .hbtn.google{color:#fff;background:#4285f4;border-color:#4285f4;display:flex;align-items:center;gap:6px}
+  .hbtn.google:hover{background:#3367d6;border-color:#3367d6}
+  .hbtn.danger{color:var(--text3)}
+  .hbtn.danger:hover{color:var(--red);border-color:#4a1a1a}
+
+  /* LAYOUT */
+  .layout{display:flex;min-height:calc(100vh - 60px)}
+
+  /* SIDEBAR */
+  .sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto}
+  .sidebar-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:0 18px 10px}
+  .fase-item{padding:10px 18px;cursor:pointer;transition:background .15s;border-left:3px solid transparent}
+  .fase-item:hover{background:var(--surface2)}
+  .fase-item.active{background:var(--surface2);border-left-color:var(--accent)}
+  .fase-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
+  .fase-item.active .fase-name{color:var(--accent)}
+  .fase-sub{font-size:11px;color:var(--text3);font-family:var(--mono)}
+  .fase-prog-bar{height:3px;background:var(--border);border-radius:99px;margin-top:6px;overflow:hidden}
+  .fase-prog-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+  .fase-prog-label{font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:3px}
+
+  /* MAIN */
+  .main{flex:1;padding:28px 28px 60px;min-width:0}
+
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:28px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px 18px}
+  .stat-label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+  .stat-val{font-size:28px;font-weight:600;font-family:var(--mono);line-height:1}
+  .stat-val.c1{color:var(--accent)}.stat-val.c2{color:var(--accent2)}.stat-val.c3{color:var(--accent3)}.stat-val.c4{color:var(--accent4)}
+
+  /* PROGRESS */
+  .progress-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:18px 20px;margin-bottom:28px}
+  .progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .progress-title{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+  .progress-nums{font-family:var(--mono);font-size:12px;color:var(--text2)}
+  .progress-track{height:6px;background:var(--border);border-radius:99px;overflow:hidden}
+  .progress-fill{height:100%;background:var(--accent);border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+
+  /* FASE HEADER */
+  .fase-header{margin-bottom:20px}
+  .fase-title{font-size:20px;font-weight:600;color:var(--text);margin-bottom:4px}
+  .fase-desc{font-size:13px;color:var(--text2);font-family:var(--mono)}
+
+  /* WEEK CARDS */
+  .week-list{display:flex;flex-direction:column;gap:8px}
+  .week-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px 18px;display:flex;align-items:flex-start;gap:14px;transition:border-color .15s,background .15s;position:relative}
+  .week-card:hover{border-color:var(--border2);background:var(--surface2)}
+  .week-card.done{background:var(--green-bg);border-color:var(--green-border)}
+  .week-card.current{border-color:var(--accent2)}
+  .week-card.current::before{content:'';display:block;width:3px;height:100%;background:var(--accent2);position:absolute;left:0;top:0;border-radius:99px 0 0 99px}
+  .check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .2s;background:var(--surface2);cursor:pointer}
+  .week-card.done .check{background:var(--green);border-color:var(--green)}
+  .check svg{display:none}
+  .week-card.done .check svg{display:block}
+  .week-body{flex:1;min-width:0}
+  .week-meta{display:flex;align-items:center;gap:10px;margin-bottom:5px;flex-wrap:wrap}
+  .week-num{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent)}
+  .week-periodo{font-family:var(--mono);font-size:11px;color:var(--text3)}
+  .badge{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:4px;font-weight:500}
+  .badge-atual{background:#0c2d4a;color:var(--accent2);border:1px solid #1a4a6e}
+  .badge-done{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+  .week-content{font-size:14px;color:var(--text);margin-bottom:6px;line-height:1.5}
+  .week-resource{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:8px}
+  .links-area{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .link-chip{display:inline-flex;align-items:center;gap:5px;background:var(--surface3);border:1px solid var(--border2);border-radius:6px;padding:3px 8px 3px 10px;font-size:12px;font-family:var(--mono);color:var(--accent2);max-width:300px}
+  .link-chip a{color:var(--accent2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+  .link-chip a:hover{color:#fff}
+  .link-chip:hover{border-color:var(--accent2)}
+  .chip-del{color:var(--text3);font-size:15px;cursor:pointer;flex-shrink:0;line-height:1;padding:0 2px;transition:color .15s}
+  .chip-del:hover{color:var(--red)}
+  .add-link-btn{display:inline-flex;align-items:center;gap:4px;background:transparent;border:1px dashed var(--border2);border-radius:6px;padding:3px 10px;font-size:11px;font-family:var(--mono);color:var(--text3);cursor:pointer;transition:all .15s}
+  .add-link-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .week-right{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;padding-left:8px}
+  .week-hours{font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:2px}
+
+  /* MODAL */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
+  .overlay.open{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r2);padding:24px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto}
+  .modal-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:2px}
+  .modal-sub{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:20px}
+  .mlabel{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+  .mlink-list{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;min-height:20px}
+  .mlink-row{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px}
+  .mlink-name{font-size:13px;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mlink-url{font-family:var(--mono);font-size:11px;flex:2;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mlink-url a{color:var(--accent2)}
+  .mlink-del{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:18px;flex-shrink:0;padding:0 4px;transition:color .15s;line-height:1}
+  .mlink-del:hover{color:var(--red)}
+  .madd{display:grid;grid-template-columns:1fr 1.8fr auto;gap:8px;margin-bottom:16px}
+  .madd input{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:8px 10px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;transition:border-color .15s;width:100%}
+  .madd input:focus{border-color:var(--accent)}
+  .madd input::placeholder{color:var(--text3)}
+  .madd-btn{background:var(--accent);border:none;border-radius:var(--r);padding:8px 14px;font-family:var(--mono);font-size:12px;font-weight:700;color:#0a0e1a;cursor:pointer;white-space:nowrap;transition:opacity .15s}
+  .madd-btn:hover{opacity:.85}
+  .mfooter{display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border);padding-top:16px;margin-top:4px}
+  .mclose{font-family:var(--mono);font-size:12px;color:var(--text2);background:transparent;border:1px solid var(--border2);border-radius:var(--r);padding:7px 18px;cursor:pointer;transition:all .15s}
+  .mclose:hover{border-color:var(--text2)}
+  .empty-msg{font-family:var(--mono);font-size:12px;color:var(--text3);padding:4px 0}
+
+  /* SETUP BOX */
+  .setup-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r2);padding:20px 24px;margin-bottom:24px}
+  .setup-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px}
+  .setup-desc{font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6}
+  .setup-steps{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+  .setup-step{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text2)}
+  .step-num{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);background:#001f19;border:1px solid var(--accent);border-radius:4px;padding:1px 6px;flex-shrink:0;margin-top:2px}
+  .setup-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;transition:border-color .15s;margin-bottom:10px}
+  .setup-input:focus{border-color:var(--accent)}
+  .setup-input::placeholder{color:var(--text3)}
+  .setup-btn-row{display:flex;gap:10px;align-items:center}
+  .setup-btn{background:var(--accent);border:none;border-radius:var(--r);padding:9px 20px;font-family:var(--mono);font-size:12px;font-weight:700;color:#0a0e1a;cursor:pointer;transition:opacity .15s}
+  .setup-btn:hover{opacity:.85}
+  .setup-note{font-family:var(--mono);font-size:11px;color:var(--text3);line-height:1.5}
+  .setup-link{color:var(--accent2)}
+  code{font-family:var(--mono);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:12px;color:var(--accent)}
+
+  ::-webkit-scrollbar{width:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+  @media(max-width:700px){
+    .sidebar{display:none}
+    .stats-grid{grid-template-columns:repeat(2,1fr)}
+    .main{padding:16px 16px 40px}
+    .header-right .hbtn.danger{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">SOC<span>/</span>tracker</div>
+  <div class="header-mid">
+    <div class="sync-indicator" id="sync-indicator">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">local</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="hbtn google" id="btn-google" onclick="connectDrive()" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Conectar Google Drive
+    </button>
+    <button class="hbtn" id="btn-user" onclick="disconnectDrive()" style="display:none"></button>
+    <button class="hbtn danger" onclick="resetAll()">↺ resetar tudo</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main">
+
+    <!-- SETUP -->
+    <div class="setup-box" id="setup-box" style="display:none">
+      <div class="setup-title">⚙ Configure seu Client ID do Google</div>
+      <div class="setup-desc">Para salvar no Google Drive, você precisa de um Client ID gratuito do Google. É feito uma única vez e leva uns 5 minutos.</div>
+      <div class="setup-steps">
+        <div class="setup-step"><span class="step-num">1</span><span>Acesse <a href="https://console.cloud.google.com/" target="_blank" class="setup-link">console.cloud.google.com</a> e crie um projeto (pode ser qualquer nome)</span></div>
+        <div class="setup-step"><span class="step-num">2</span><span>Vá em <b>APIs e Serviços → Credenciais → Criar Credenciais → ID do cliente OAuth 2.0</b></span></div>
+        <div class="setup-step"><span class="step-num">3</span><span>Escolha tipo <b>Aplicativo da Web</b>. Em "Origens JS autorizadas" adicione <code>null</code> e também o caminho local do arquivo (ex: <code>file://</code>)</span></div>
+        <div class="setup-step"><span class="step-num">4</span><span>Ative a <b>Google Drive API</b> em APIs e Serviços → Biblioteca</span></div>
+        <div class="setup-step"><span class="step-num">5</span><span>Cole o Client ID abaixo e clique em Salvar</span></div>
+      </div>
+      <input class="setup-input" id="inp-client-id" placeholder="cole seu Client ID aqui  (ex: 123456789-abc.apps.googleusercontent.com)" />
+      <div class="setup-btn-row">
+        <button class="setup-btn" onclick="saveClientId()">Salvar e conectar</button>
+        <span class="setup-note">O Client ID fica salvo no seu arquivo HTML, não sai da sua máquina.</span>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Semanas feitas</div><div class="stat-val c1" id="s-done">0</div></div>
+      <div class="stat-card"><div class="stat-label">Restantes</div><div class="stat-val c2" id="s-rest">76</div></div>
+      <div class="stat-card"><div class="stat-label">Horas estudadas</div><div class="stat-val c3" id="s-horas">0h</div></div>
+      <div class="stat-card"><div class="stat-label">Progresso total</div><div class="stat-val c4" id="s-pct">0%</div></div>
+    </div>
+    <div class="progress-section">
+      <div class="progress-header">
+        <span class="progress-title">Progresso geral da trilha</span>
+        <span class="progress-nums" id="pb-nums">0 / 76 semanas</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="pb-fill" style="width:0%"></div></div>
+    </div>
+    <div class="fase-header">
+      <div class="fase-title" id="fase-title">Fase 1 — Fundamentos</div>
+      <div class="fase-desc" id="fase-desc">Jun–Set 2026 · 17 semanas · CompTIA Security+</div>
+    </div>
+    <div class="week-list" id="week-list"></div>
+  </main>
+</div>
+
+<!-- modal de links -->
+<div class="overlay" id="modal-links">
+  <div class="modal">
+    <div class="modal-title" id="ml-title"></div>
+    <div class="modal-sub" id="ml-sub"></div>
+    <div class="mlabel">Links salvos</div>
+    <div class="mlink-list" id="ml-list"></div>
+    <div class="mlabel">Adicionar novo link</div>
+    <div class="madd">
+      <input id="inp-name" placeholder="nome  (ex: Alura)" />
+      <input id="inp-url"  placeholder="https://..." />
+      <button class="madd-btn" onclick="addLink()">+ add</button>
+    </div>
+    <div class="mfooter">
+      <button class="mclose" onclick="closeLinks()">fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   DADOS DA TRILHA
+═══════════════════════════════════════ */
+const FASES=[{id:1,nome:"Fase 1",titulo:"Fase 1 — Fundamentos",desc:"Jun–Set 2026 · 17 semanas · CompTIA Security+",semanas:[
+{id:1,num:"Semana 01",periodo:"01–07 Jun 2026",conteudo:"Linux: comandos básicos, navegação de arquivos e permissões",recurso:"Network Chuck (YouTube)"},
+{id:2,num:"Semana 02",periodo:"08–14 Jun 2026",conteudo:"Linux: processos, serviços e scripts bash básicos",recurso:"Network Chuck (YouTube)"},
+{id:3,num:"Semana 03",periodo:"15–21 Jun 2026",conteudo:"Redes: modelo OSI, TCP/IP e endereçamento IP",recurso:"Network Chuck (YouTube)"},
+{id:4,num:"Semana 04",periodo:"22–28 Jun 2026",conteudo:"Redes: DNS, DHCP, HTTP/S e portas comuns",recurso:"Network Chuck + TryHackMe Pre-Security"},
+{id:5,num:"Semana 05",periodo:"29 Jun–05 Jul 2026",conteudo:"Security+: ameaças e vulnerabilidades (Domain 1)",recurso:"Professor Messer (YouTube)"},
+{id:6,num:"Semana 06",periodo:"06–12 Jul 2026",conteudo:"Security+: arquitetura e design de segurança (Domain 2)",recurso:"Professor Messer (YouTube)"},
+{id:7,num:"Semana 07",periodo:"13–19 Jul 2026",conteudo:"Security+: implementação (Domain 3)",recurso:"Professor Messer (YouTube)"},
+{id:8,num:"Semana 08",periodo:"20–26 Jul 2026",conteudo:"Security+: operações e resposta a incidentes (Domain 4)",recurso:"Professor Messer (YouTube)"},
+{id:9,num:"Semana 09",periodo:"27 Jul–02 Ago 2026",conteudo:"Security+: governança, risco e compliance (Domain 5)",recurso:"Professor Messer (YouTube)"},
+{id:10,num:"Semana 10",periodo:"03–09 Ago 2026",conteudo:"TryHackMe Pre-Security: Web Fundamentals",recurso:"TryHackMe (gratuito)"},
+{id:11,num:"Semana 11",periodo:"10–16 Ago 2026",conteudo:"TryHackMe Pre-Security: introdução ao Linux",recurso:"TryHackMe"},
+{id:12,num:"Semana 12",periodo:"17–23 Ago 2026",conteudo:"Revisão geral Security+ e simulados",recurso:"Professor Messer Practice Exams"},
+{id:13,num:"Semana 13",periodo:"24–30 Ago 2026",conteudo:"Simulados Security+ e revisão de pontos fracos",recurso:"ExamCompass (gratuito)"},
+{id:14,num:"Semana 14",periodo:"31 Ago–06 Set 2026",conteudo:"Revisão final e prova CompTIA Security+",recurso:"Pearson VUE — agendar prova"},
+{id:15,num:"Semana 15",periodo:"07–13 Set 2026",conteudo:"TryHackMe SOC Level 1: módulo de análise de logs",recurso:"TryHackMe (assinatura)"},
+{id:16,num:"Semana 16",periodo:"14–20 Set 2026",conteudo:"TryHackMe SOC Level 1: análise de tráfego de rede",recurso:"TryHackMe"},
+{id:17,num:"Semana 17",periodo:"21–27 Set 2026",conteudo:"TryHackMe SOC Level 1: threat intelligence",recurso:"TryHackMe"}
+]},{id:2,nome:"Fase 2",titulo:"Fase 2 — Prática SOC",desc:"Out 2026–Fev 2027 · 18 semanas · BTL1 + Splunk",semanas:[
+{id:18,num:"Semana 18",periodo:"01–07 Out 2026",conteudo:"Splunk: instalação, interface e buscas básicas (SPL)",recurso:"Splunk Free Training"},
+{id:19,num:"Semana 19",periodo:"08–14 Out 2026",conteudo:"Splunk: dashboards, alertas e reports",recurso:"Splunk Training"},
+{id:20,num:"Semana 20",periodo:"15–21 Out 2026",conteudo:"Splunk: ingestão de logs, sourcetypes e parsing",recurso:"Splunk Training"},
+{id:21,num:"Semana 21",periodo:"22–28 Out 2026",conteudo:"Splunk: correlações e SPL avançado",recurso:"Splunk Training + simulados"},
+{id:22,num:"Semana 22",periodo:"29 Out–04 Nov 2026",conteudo:"Prova Splunk Core Certified User e início BTL1",recurso:"Splunk / SecurityBlue Team"},
+{id:23,num:"Semana 23",periodo:"05–11 Nov 2026",conteudo:"BTL1: módulo de análise de phishing",recurso:"SecurityBlue Team"},
+{id:24,num:"Semana 24",periodo:"12–18 Nov 2026",conteudo:"BTL1: módulo de análise de logs e SIEM",recurso:"SecurityBlue Team"},
+{id:25,num:"Semana 25",periodo:"19–25 Nov 2026",conteudo:"BTL1: módulo de threat intelligence",recurso:"SecurityBlue Team"},
+{id:26,num:"Semana 26",periodo:"26 Nov–02 Dez 2026",conteudo:"BTL1: módulo de investigação digital",recurso:"SecurityBlue Team"},
+{id:27,num:"Semana 27",periodo:"03–09 Dez 2026",conteudo:"BTL1: módulo de resposta a incidentes",recurso:"SecurityBlue Team"},
+{id:28,num:"Semana 28",periodo:"10–16 Dez 2026",conteudo:"BTL1: labs práticos e revisão geral",recurso:"SecurityBlue Team"},
+{id:29,num:"Semana 29",periodo:"17–23 Dez 2026",conteudo:"BTL1: simulado final e ajustes",recurso:"SecurityBlue Team"},
+{id:30,num:"Semana 30",periodo:"04–10 Jan 2027",conteudo:"Prova BTL1 e início Blue Team Labs Online",recurso:"SecurityBlue Team / BTLO"},
+{id:31,num:"Semana 31",periodo:"11–17 Jan 2027",conteudo:"BTLO: labs de investigação de malware",recurso:"Blue Team Labs Online"},
+{id:32,num:"Semana 32",periodo:"18–24 Jan 2027",conteudo:"BTLO: labs de análise de rede",recurso:"Blue Team Labs Online"},
+{id:33,num:"Semana 33",periodo:"25–31 Jan 2027",conteudo:"BTLO: labs de forense de memória",recurso:"Blue Team Labs Online"},
+{id:34,num:"Semana 34",periodo:"01–07 Fev 2027",conteudo:"Consolidação Fase 2 e documentar aprendizados no GitHub",recurso:"GitHub / LinkedIn"},
+{id:35,num:"Semana 35",periodo:"08–14 Fev 2027",conteudo:"Revisão geral Fases 1 e 2 e publicar post no LinkedIn",recurso:"LinkedIn"}
+]},{id:3,nome:"Fase 3",titulo:"Fase 3 — Especialização",desc:"Mar–Nov 2027 · 27 semanas · SC-200 + MITRE + DFIR",semanas:[
+{id:36,num:"Semana 36",periodo:"01–07 Mar 2027",conteudo:"SC-200: fundamentos de segurança no Azure",recurso:"Microsoft Learn (gratuito)"},
+{id:37,num:"Semana 37",periodo:"08–14 Mar 2027",conteudo:"SC-200: Microsoft Defender for Endpoint",recurso:"Microsoft Learn"},
+{id:38,num:"Semana 38",periodo:"15–21 Mar 2027",conteudo:"SC-200: Microsoft Defender for Office 365",recurso:"Microsoft Learn"},
+{id:39,num:"Semana 39",periodo:"22–28 Mar 2027",conteudo:"SC-200: Microsoft Sentinel — SIEM na nuvem",recurso:"Microsoft Learn"},
+{id:40,num:"Semana 40",periodo:"29 Mar–04 Abr 2027",conteudo:"SC-200: investigação e resposta com Sentinel",recurso:"Microsoft Learn"},
+{id:41,num:"Semana 41",periodo:"05–11 Abr 2027",conteudo:"SC-200: automação com playbooks e Logic Apps",recurso:"Microsoft Learn"},
+{id:42,num:"Semana 42",periodo:"12–18 Abr 2027",conteudo:"SC-200: simulados e revisão geral",recurso:"MeasureUp / WhizLabs"},
+{id:43,num:"Semana 43",periodo:"19–25 Abr 2027",conteudo:"Prova SC-200 e início MITRE ATT&CK",recurso:"Microsoft / attack.mitre.org"},
+{id:44,num:"Semana 44",periodo:"26 Abr–02 Mai 2027",conteudo:"MITRE ATT&CK: reconhecimento e acesso inicial",recurso:"attack.mitre.org"},
+{id:45,num:"Semana 45",periodo:"03–09 Mai 2027",conteudo:"MITRE ATT&CK: execução, persistência e escalada de privilégio",recurso:"attack.mitre.org"},
+{id:46,num:"Semana 46",periodo:"10–16 Mai 2027",conteudo:"MITRE ATT&CK: evasão de defesa e acesso a credenciais",recurso:"attack.mitre.org + BTLO"},
+{id:47,num:"Semana 47",periodo:"17–23 Mai 2027",conteudo:"MITRE ATT&CK: movimentação lateral e exfiltração",recurso:"attack.mitre.org + BTLO"},
+{id:48,num:"Semana 48",periodo:"24–30 Mai 2027",conteudo:"Threat Hunting: processo e metodologia",recurso:"TryHackMe SOC Level 2"},
+{id:49,num:"Semana 49",periodo:"31 Mai–06 Jun 2027",conteudo:"Threat Hunting: hipóteses, IOCs e TTPs",recurso:"TryHackMe SOC Level 2"},
+{id:50,num:"Semana 50",periodo:"07–13 Jun 2027",conteudo:"Threat Hunting: labs práticos no Microsoft Sentinel",recurso:"Microsoft Learn / BTLO"},
+{id:51,num:"Semana 51",periodo:"14–20 Jun 2027",conteudo:"DFIR: fundamentos de forense digital",recurso:"Blue Team Labs Online"},
+{id:52,num:"Semana 52",periodo:"21–27 Jun 2027",conteudo:"DFIR: artefatos Windows (registry, event logs)",recurso:"BTLO / TryHackMe"},
+{id:53,num:"Semana 53",periodo:"28 Jun–04 Jul 2027",conteudo:"DFIR: análise de memória com Volatility",recurso:"Blue Team Labs Online"},
+{id:54,num:"Semana 54",periodo:"05–11 Jul 2027",conteudo:"DFIR: análise de malware estática (strings, PE headers)",recurso:"Any.run + BTLO"},
+{id:55,num:"Semana 55",periodo:"12–18 Jul 2027",conteudo:"DFIR: análise de malware dinâmica (sandbox)",recurso:"Any.run + Hybrid Analysis"},
+{id:56,num:"Semana 56",periodo:"19–25 Jul 2027",conteudo:"CTF blue team: caso completo 1 no Hack The Box",recurso:"Hack The Box / BTLO"},
+{id:57,num:"Semana 57",periodo:"26 Jul–01 Ago 2027",conteudo:"CTF blue team: escrever writeup detalhado do caso 1",recurso:"GitHub / Medium"},
+{id:58,num:"Semana 58",periodo:"02–08 Ago 2027",conteudo:"CTF blue team: caso completo 2 e writeup",recurso:"GitHub / Medium"},
+{id:59,num:"Semana 59",periodo:"09–15 Ago 2027",conteudo:"TryHackMe SOC Level 2: endpoint security monitoring",recurso:"TryHackMe"},
+{id:60,num:"Semana 60",periodo:"16–22 Ago 2027",conteudo:"TryHackMe SOC Level 2: network traffic analysis avançado",recurso:"TryHackMe"},
+{id:61,num:"Semana 61",periodo:"23–29 Ago 2027",conteudo:"TryHackMe SOC Level 2: security information management",recurso:"TryHackMe"},
+{id:62,num:"Semana 62",periodo:"30 Ago–05 Set 2027",conteudo:"Revisão fase 3 e atualizar LinkedIn com novas certificações",recurso:"LinkedIn"}
+]},{id:4,nome:"Fase 4",titulo:"Fase 4 — Mercado",desc:"Dez 2027–Mar 2028 · 14 semanas · CySA+ + Primeira vaga",semanas:[
+{id:63,num:"Semana 63",periodo:"01–07 Dez 2027",conteudo:"CySA+: gerenciamento de ameaças e vulnerabilidades",recurso:"CompTIA CySA+ Study Guide"},
+{id:64,num:"Semana 64",periodo:"08–14 Dez 2027",conteudo:"CySA+: análise de segurança de software e sistemas",recurso:"Jason Dion (Udemy)"},
+{id:65,num:"Semana 65",periodo:"15–21 Dez 2027",conteudo:"CySA+: resposta a incidentes e recuperação",recurso:"CompTIA Study Guide"},
+{id:66,num:"Semana 66",periodo:"04–10 Jan 2028",conteudo:"CySA+: simulados e revisão de domínios fracos",recurso:"ExamCompass / MeasureUp"},
+{id:67,num:"Semana 67",periodo:"11–17 Jan 2028",conteudo:"Prova CySA+ e início da construção do portfólio",recurso:"Pearson VUE"},
+{id:68,num:"Semana 68",periodo:"18–24 Jan 2028",conteudo:"Portfólio: organizar GitHub com labs, scripts e writeups",recurso:"GitHub"},
+{id:69,num:"Semana 69",periodo:"25–31 Jan 2028",conteudo:"Portfólio: escrever 2 writeups detalhados no Medium",recurso:"Medium"},
+{id:70,num:"Semana 70",periodo:"01–07 Fev 2028",conteudo:"Portfólio: criar README profissional e página de perfil",recurso:"GitHub"},
+{id:71,num:"Semana 71",periodo:"08–14 Fev 2028",conteudo:"LinkedIn: otimizar perfil, headline, about e habilidades",recurso:"LinkedIn"},
+{id:72,num:"Semana 72",periodo:"15–21 Fev 2028",conteudo:"Aplicar para vagas SOC N1/N2 e personalizar currículo",recurso:"Gupy / LinkedIn Jobs"},
+{id:73,num:"Semana 73",periodo:"22–28 Fev 2028",conteudo:"Preparação técnica para entrevistas SOC",recurso:"Glassdoor / YouTube"},
+{id:74,num:"Semana 74",periodo:"01–07 Mar 2028",conteudo:"Entrevistas técnicas e continuar aplicando para vagas",recurso:"LinkedIn / Gupy"},
+{id:75,num:"Semana 75",periodo:"08–14 Mar 2028",conteudo:"Analisar feedbacks de entrevistas e cobrir lacunas",recurso:"TryHackMe / BTLO"},
+{id:76,num:"Semana 76",periodo:"15–21 Mar 2028",conteudo:"Networking em eventos de segurança e comunidades",recurso:"Meetup / ISSA Brasil"}
+]}];
+
+/* ═══════════════════════════════════════
+   ESTADO
+═══════════════════════════════════════ */
+const TOTAL=76;
+const K_DONE='soc_done_v1',K_FASE='soc_fase_v1',K_LINKS='soc_links_v1',K_CID='soc_client_id';
+const DRIVE_FILE='soc_tracker_data.json';
+const SCOPES='https://www.googleapis.com/auth/drive.appdata';
+
+let done={},links={},currentFase=1,modalId=null;
+let gToken=null,driveFileId=null,saveTimer=null,clientId='';
+
+/* ═══════════════════════════════════════
+   PERSISTÊNCIA LOCAL
+═══════════════════════════════════════ */
+function loadLocal(){
+  try{const d=localStorage.getItem(K_DONE);if(d)done=JSON.parse(d);}catch(e){}
+  try{const f=localStorage.getItem(K_FASE);if(f)currentFase=parseInt(f)||1;}catch(e){}
+  try{const l=localStorage.getItem(K_LINKS);if(l)links=JSON.parse(l);}catch(e){}
+  clientId=localStorage.getItem(K_CID)||'';
+}
+function saveLocal(){
+  try{localStorage.setItem(K_DONE,JSON.stringify(done));}catch(e){}
+  try{localStorage.setItem(K_FASE,String(currentFase));}catch(e){}
+  try{localStorage.setItem(K_LINKS,JSON.stringify(links));}catch(e){}
+}
+
+/* ═══════════════════════════════════════
+   GOOGLE DRIVE
+═══════════════════════════════════════ */
+function setSyncStatus(status,text){
+  const ind=document.getElementById('sync-indicator');
+  const dot=document.getElementById('sync-dot');
+  const lbl=document.getElementById('sync-label');
+  ind.className='sync-indicator '+status;
+  dot.className='sync-dot'+(status==='syncing'?' pulse':'');
+  lbl.textContent=text;
+}
+
+function saveClientId(){
+  const val=document.getElementById('inp-client-id').value.trim();
+  if(!val){alert('Cole o Client ID antes de salvar.');return;}
+  localStorage.setItem(K_CID,val);
+  clientId=val;
+  document.getElementById('setup-box').style.display='none';
+  initGoogleAuth();
+}
+
+function initGoogleAuth(){
+  if(!clientId){
+    document.getElementById('setup-box').style.display='block';
+    document.getElementById('btn-google').style.display='flex';
+    document.getElementById('btn-google').onclick=()=>document.getElementById('setup-box').style.display='block';
+    return;
+  }
+  const s=document.createElement('script');
+  s.src='https://accounts.google.com/gsi/client';
+  s.onload=()=>{
+    document.getElementById('btn-google').style.display='flex';
+    document.getElementById('btn-google').onclick=connectDrive;
+  };
+  document.head.appendChild(s);
+}
+
+function connectDrive(){
+  if(!clientId){document.getElementById('setup-box').style.display='block';return;}
+  if(!window.google){alert('Script do Google ainda carregando, aguarde um segundo.');return;}
+  setSyncStatus('syncing','conectando…');
+  const client=google.accounts.oauth2.initTokenClient({
+    client_id:clientId,
+    scope:SCOPES,
+    callback:(resp)=>{
+      if(resp.error){setSyncStatus('error','erro auth');return;}
+      gToken=resp.access_token;
+      document.getElementById('btn-google').style.display='none';
+      document.getElementById('btn-user').style.display='flex';
+      document.getElementById('btn-user').textContent='✓ Drive conectado';
+      setSyncStatus('syncing','carregando…');
+      loadFromDrive();
+    }
+  });
+  client.requestAccessToken();
+}
+
+function disconnectDrive(){
+  gToken=null;driveFileId=null;
+  document.getElementById('btn-google').style.display='flex';
+  document.getElementById('btn-user').style.display='none';
+  setSyncStatus('','local');
+}
+
+async function loadFromDrive(){
+  try{
+    const res=await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name)',{
+      headers:{Authorization:'Bearer '+gToken}
+    });
+    const data=await res.json();
+    const file=data.files&&data.files.find(f=>f.name===DRIVE_FILE);
+    if(file){
+      driveFileId=file.id;
+      const content=await fetch('https://www.googleapis.com/drive/v3/files/'+driveFileId+'?alt=media',{
+        headers:{Authorization:'Bearer '+gToken}
+      });
+      const json=await content.json();
+      if(json.done)done=json.done;
+      if(json.links)links=json.links;
+      saveLocal();
+      updateStats();renderSidebar();renderFase();
+      setSyncStatus('ok','Drive ✓');
+    } else {
+      setSyncStatus('ok','Drive ✓');
+      scheduleSave();
+    }
+  }catch(e){setSyncStatus('error','erro Drive');}
+}
+
+async function saveToDrive(){
+  if(!gToken)return;
+  setSyncStatus('syncing','salvando…');
+  const body=JSON.stringify({done,links});
+  try{
+    if(driveFileId){
+      await fetch('https://www.googleapis.com/upload/drive/v3/files/'+driveFileId+'?uploadType=media',{
+        method:'PATCH',
+        headers:{Authorization:'Bearer '+gToken,'Content-Type':'application/json'},
+        body
+      });
+    } else {
+      const meta=await fetch('https://www.googleapis.com/drive/v3/files',{
+        method:'POST',
+        headers:{Authorization:'Bearer '+gToken,'Content-Type':'application/json'},
+        body:JSON.stringify({name:DRIVE_FILE,parents:['appDataFolder']})
+      });
+      const mj=await meta.json();
+      driveFileId=mj.id;
+      await fetch('https://www.googleapis.com/upload/drive/v3/files/'+driveFileId+'?uploadType=media',{
+        method:'PATCH',
+        headers:{Authorization:'Bearer '+gToken,'Content-Type':'application/json'},
+        body
+      });
+    }
+    setSyncStatus('ok','Drive ✓');
+  }catch(e){setSyncStatus('error','erro ao salvar');}
+}
+
+function scheduleSave(){
+  saveLocal();
+  if(gToken){
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(saveToDrive,1500);
+  }
+}
+
+/* ═══════════════════════════════════════
+   UI
+═══════════════════════════════════════ */
+function countDone(){return Object.values(done).filter(Boolean).length;}
+function horasDone(){let h=0;FASES.forEach(f=>f.semanas.forEach(s=>{if(done[s.id])h+=11;}));return h;}
+function firstUndone(){for(const f of FASES)for(const s of f.semanas)if(!done[s.id])return s.id;return null;}
+function faseDone(f){return f.semanas.filter(s=>done[s.id]).length;}
+function getLinks(id){return links[id]||[];}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function updateStats(){
+  const n=countDone(),pct=Math.round(n/TOTAL*100);
+  document.getElementById('s-done').textContent=n;
+  document.getElementById('s-rest').textContent=TOTAL-n;
+  document.getElementById('s-horas').textContent=horasDone()+'h';
+  document.getElementById('s-pct').textContent=pct+'%';
+  document.getElementById('pb-fill').style.width=pct+'%';
+  document.getElementById('pb-nums').textContent=n+' / '+TOTAL+' semanas';
+}
+
+function renderSidebar(){
+  const wrap=document.getElementById('sidebar');
+  wrap.innerHTML='<div class="sidebar-label">Fases</div>';
+  FASES.forEach(f=>{
+    const nd=faseDone(f),total=f.semanas.length,pct=Math.round(nd/total*100);
+    const div=document.createElement('div');
+    div.className='fase-item'+(f.id===currentFase?' active':'');
+    div.innerHTML=`<div class="fase-name">${f.nome}</div><div class="fase-sub">${f.desc.split('·')[0].trim()}</div><div class="fase-prog-bar"><div class="fase-prog-fill" style="width:${pct}%"></div></div><div class="fase-prog-label">${nd}/${total} · ${pct}%</div>`;
+    div.onclick=()=>{currentFase=f.id;scheduleSave();renderSidebar();renderFase();};
+    wrap.appendChild(div);
+  });
+}
+
+function renderFase(){
+  const fase=FASES.find(f=>f.id===currentFase);
+  if(!fase)return;
+  document.getElementById('fase-title').textContent=fase.titulo;
+  document.getElementById('fase-desc').textContent=fase.desc;
+  const current=firstUndone();
+  const wrap=document.getElementById('week-list');
+  wrap.innerHTML='';
+  fase.semanas.forEach(s=>{
+    const isDone=!!done[s.id],isCurrent=s.id===current,wl=getLinks(s.id);
+    const chipsHTML=wl.map((l,i)=>`<span class="link-chip"><a href="${esc(l.url)}" target="_blank">↗ ${esc(l.name)}</a><span class="chip-del" onclick="delLink(event,${s.id},${i})">×</span></span>`).join('');
+    const card=document.createElement('div');
+    card.className='week-card'+(isDone?' done':'')+(isCurrent?' current':'');
+    card.innerHTML=`
+      <div class="check" onclick="toggle(${s.id},event)">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="week-body">
+        <div class="week-meta">
+          <span class="week-num">${s.num}</span>
+          <span class="week-periodo">${s.periodo}</span>
+          ${isCurrent?'<span class="badge badge-atual">▶ atual</span>':''}
+          ${isDone?'<span class="badge badge-done">✓ concluída</span>':''}
+        </div>
+        <div class="week-content">${s.conteudo}</div>
+        <div class="week-resource">↳ ${s.recurso}</div>
+        <div class="links-area">
+          ${chipsHTML}
+          <button class="add-link-btn" onclick="openLinks(${s.id},event)">+ link do curso</button>
+        </div>
+      </div>
+      <div class="week-right"><div class="week-hours">11h</div></div>`;
+    wrap.appendChild(card);
+  });
+}
+
+function toggle(id,e){
+  e.stopPropagation();
+  done[id]=!done[id];
+  scheduleSave();updateStats();renderSidebar();renderFase();
+}
+
+function delLink(e,wid,idx){
+  e.preventDefault();e.stopPropagation();
+  if(!links[wid])return;
+  links[wid].splice(idx,1);
+  scheduleSave();renderFase();
+}
+
+function openLinks(wid,e){
+  e&&e.stopPropagation();
+  modalId=wid;
+  const s=FASES.flatMap(f=>f.semanas).find(x=>x.id===wid);
+  document.getElementById('ml-title').textContent=s?s.num+' — '+s.conteudo.substring(0,55)+(s.conteudo.length>55?'…':''):'';
+  document.getElementById('ml-sub').textContent=s?s.periodo:'';
+  document.getElementById('inp-name').value='';
+  document.getElementById('inp-url').value='';
+  renderModalLinks();
+  document.getElementById('modal-links').classList.add('open');
+  setTimeout(()=>document.getElementById('inp-name').focus(),60);
+}
+
+function renderModalLinks(){
+  const list=document.getElementById('ml-list');
+  const wl=getLinks(modalId);
+  if(!wl.length){list.innerHTML='<div class="empty-msg">nenhum link adicionado ainda</div>';return;}
+  list.innerHTML=wl.map((l,i)=>`
+    <div class="mlink-row">
+      <span class="mlink-name">${esc(l.name)}</span>
+      <span class="mlink-url"><a href="${esc(l.url)}" target="_blank">${esc(l.url)}</a></span>
+      <button class="mlink-del" onclick="modalDel(${i})">×</button>
+    </div>`).join('');
+}
+
+function modalDel(idx){
+  if(!links[modalId])return;
+  links[modalId].splice(idx,1);
+  scheduleSave();renderModalLinks();renderFase();
+}
+
+function addLink(){
+  const name=document.getElementById('inp-name').value.trim();
+  let url=document.getElementById('inp-url').value.trim();
+  if(!name||!url){alert('Preencha o nome e o link.');return;}
+  if(!url.startsWith('http'))url='https://'+url;
+  if(!links[modalId])links[modalId]=[];
+  links[modalId].push({name,url});
+  document.getElementById('inp-name').value='';
+  document.getElementById('inp-url').value='';
+  scheduleSave();renderModalLinks();renderFase();
+  document.getElementById('inp-name').focus();
+}
+
+function closeLinks(){document.getElementById('modal-links').classList.remove('open');modalId=null;}
+
+function resetAll(){
+  if(!confirm('Resetar todo o progresso e links? Isso apaga também o arquivo no Drive.'))return;
+  done={};links={};
+  driveFileId=null;
+  scheduleSave();updateStats();renderSidebar();renderFase();
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeLinks();
+  if(e.key==='Enter'&&document.getElementById('modal-links').classList.contains('open')){
+    const n=document.getElementById('inp-name').value.trim();
+    const u=document.getElementById('inp-url').value.trim();
+    if(n&&u)addLink();
+  }
+});
+document.getElementById('modal-links').addEventListener('click',e=>{
+  if(e.target===document.getElementById('modal-links'))closeLinks();
+});
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+loadLocal();
+updateStats();
+renderSidebar();
+renderFase();
+initGoogleAuth();
+</script>
+</body>
+</html>
