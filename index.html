@@ -839,25 +839,59 @@ function saveLocal(){
 /* ─── DRIVE ─── */
 function ss(st,tx){const i=document.getElementById('sind'),d=document.getElementById('sdot'),l=document.getElementById('slbl');i.className='sind '+st;d.className='sdot'+(st==='syncing'?' pulse':'');l.textContent=tx;}
 function saveClientId(){const v=document.getElementById('inp-cid').value.trim();if(!v){alert('Cole o Client ID.');return;}localStorage.setItem(K.C,v);cid=v;document.getElementById('setup-box').style.display='none';initGA();}
+let gTokenClient=null;
+
 function initGA(){
   if(!cid){document.getElementById('setup-box').style.display='block';document.getElementById('btn-google').style.display='flex';return;}
+  ss('syncing','conectando…');
   const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';
-  s.onload=()=>{document.getElementById('btn-google').style.display='flex';};
+  s.onload=()=>{
+    gTokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:cid,scope:SC,
+      prompt:'',
+      callback:(r)=>{
+        if(r.error){
+          /* token silencioso falhou — mostra botão para login manual */
+          ss('','local');
+          document.getElementById('btn-google').style.display='flex';
+          return;
+        }
+        gTok=r.access_token;
+        document.getElementById('btn-google').style.display='none';
+        document.getElementById('btn-user').style.display='flex';
+        ss('syncing','carregando…');
+        loadFromDrive();
+        /* renovar token automaticamente a cada 45 min */
+        clearInterval(window._tokRefresh);
+        window._tokRefresh=setInterval(()=>{
+          if(gTokenClient)gTokenClient.requestAccessToken({prompt:''});
+        },45*60*1000);
+      }
+    });
+    /* tenta reconectar silenciosamente sem popup */
+    gTokenClient.requestAccessToken({prompt:''});
+  };
   document.head.appendChild(s);
 }
+
 function connectDrive(){
   if(!cid){document.getElementById('setup-box').style.display='block';return;}
-  if(!window.google){alert('Aguarde...');return;}
+  if(!gTokenClient){alert('Aguarde o carregamento...');return;}
   ss('syncing','conectando…');
-  google.accounts.oauth2.initTokenClient({client_id:cid,scope:SC,callback:(r)=>{
-    if(r.error){ss('error','erro auth');return;}
-    gTok=r.access_token;
-    document.getElementById('btn-google').style.display='none';
-    document.getElementById('btn-user').style.display='flex';
-    ss('syncing','carregando…');loadFromDrive();
-  }}).requestAccessToken();
+  /* prompt:'select_account' força a tela de login quando acionado manualmente */
+  gTokenClient.requestAccessToken({prompt:'select_account'});
 }
-function disconnectDrive(){gTok=null;dfid=null;document.getElementById('btn-google').style.display='flex';document.getElementById('btn-user').style.display='none';ss('','local');}
+
+function disconnectDrive(){
+  gTok=null;dfid=null;
+  clearInterval(window._tokRefresh);
+  document.getElementById('btn-google').style.display='flex';
+  document.getElementById('btn-user').style.display='none';
+  ss('','local');
+  /* revoga token para forçar login na próxima vez */
+  if(window.google&&google.accounts&&google.accounts.oauth2)
+    google.accounts.oauth2.revoke(gTok||'',()=>{});
+}
 async function loadFromDrive(){
   try{
     const r=await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name)',{headers:{Authorization:'Bearer '+gTok}});
