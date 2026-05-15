@@ -1310,7 +1310,7 @@ function updateStreak(mark){
   if(streak.lastDate===yesterday)streak.count++;
   else streak.count=1;
   streak.lastDate=today;
-  document.getElementById('streak-num').textContent=streak.count;
+  setText('streak-num',streak.count);
 }
 function addActivity(msg){
   activity.unshift({msg,time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),date:todayStr()});
@@ -1338,6 +1338,18 @@ function showPage(name){
 /* ── UPDATE ALL ── */
 function updateAll(){updateStats();renderSidebars();renderFase();renderDash();renderNotes();renderMaps();}
 
+/* ── STATS ── */
+function setText(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+function setStyle(id,prop,val){const el=document.getElementById(id);if(el)el.style[prop]=val;}
+function setHTML(id,val){const el=document.getElementById(id);if(el)el.innerHTML=val;}
+function updateStats(){
+  const n=cntDone(),pct=Math.round(n/TOTAL*100);
+  setText('s-done',n);setText('s-rest',TOTAL-n);
+  setText('s-horas',hrsDone()+'h');setText('s-pct',pct+'%');
+  setStyle('pbfill','width',pct+'%');
+  setText('pbnums',n+'/'+TOTAL+' semanas');
+}
+
 /* ── DASHBOARD ── */
 const CERTS=[
   {name:"CompTIA Security+",icon:"🛡️",color:"#0ea5e9",semanas:[5,6,7,8,9,12,13,14]},
@@ -1347,43 +1359,20 @@ const CERTS=[
   {name:"CompTIA CySA+",icon:"📋",color:"#e24b4a",semanas:[63,64,65,66,67]},
 ];
 function renderDash(){
-  document.getElementById('streak-num').textContent=streak.count;
-  // Certs
+  setText('streak-num',streak.count);
   const cl=document.getElementById('cert-list');
-  cl.innerHTML=CERTS.map(c=>{
-    const done2=c.semanas.filter(id=>done[id]).length;
-    const pct=Math.round(done2/c.semanas.length*100);
-    return `<div class="cert-item"><span class="cert-icon">${c.icon}</span><div class="cert-info"><div class="cert-name">${c.name}</div><div class="cert-desc">${done2}/${c.semanas.length} semanas · ${pct}%</div><div class="cert-prog"><div class="cert-fill" style="width:${pct}%;background:${c.color}"></div></div></div></div>`;
+  if(cl)cl.innerHTML=CERTS.map(c=>{
+    const d2=c.semanas.filter(id=>done[id]).length,pct=Math.round(d2/c.semanas.length*100);
+    return `<div class="cert-item"><span class="cert-icon">${c.icon}</span><div class="cert-info"><div class="cert-name">${c.name}</div><div class="cert-desc">${d2}/${c.semanas.length} semanas · ${pct}%</div><div class="cert-prog"><div class="cert-fill" style="width:${pct}%;background:${c.color}"></div></div></div></div>`;
   }).join('');
-  // Atividade
   const al=document.getElementById('activity-list');
-  if(!activity.length){al.innerHTML='<div class="emsg">Nenhuma atividade ainda</div>';}
-  else{al.innerHTML=activity.slice(0,8).map(a=>`<div class="act-item"><div class="act-dot"></div><span>${esc(a.msg)}</span><span class="act-time">${a.time}</span></div>`).join('');}
-  // Gráfico de fases
+  if(al)al.innerHTML=!activity.length?'<div class="emsg">Nenhuma atividade ainda</div>':activity.slice(0,8).map(a=>`<div class="act-item"><div class="act-dot"></div><span>${esc(a.msg)}</span><span class="act-time">${a.time}</span></div>`).join('');
   const fc=document.getElementById('fase-chart');
-  const maxPct=Math.max(...FASES.map(f=>Math.round(faseDone(f)/f.semanas.length*100)),10);
-  fc.innerHTML=FASES.map((f,i)=>{const pct=Math.round(faseDone(f)/f.semanas.length*100);const h=Math.max(4,Math.round((pct/maxPct)*56));const colors=['#00d4aa','#0ea5e9','#8b5cf6','#f59e0b'];return `<div class="dash-bar${i===cf-1?' active':''}" style="height:${h}px;background:${colors[i]}" title="${f.nome}: ${pct}%"></div>`;}).join('');
-  // Quiz scores
+  if(fc){const maxPct=Math.max(...FASES.map(f=>Math.round(faseDone(f)/f.semanas.length*100)),10);fc.innerHTML=FASES.map((f,i)=>{const pct=Math.round(faseDone(f)/f.semanas.length*100);const h=Math.max(4,Math.round((pct/maxPct)*56));const colors=['#00d4aa','#0ea5e9','#8b5cf6','#f59e0b'];return `<div class="dash-bar${i===cf-1?' active':''}" style="height:${h}px;background:${colors[i]}" title="${f.nome}: ${pct}%"></div>`;}).join('');}
   const qs=document.getElementById('dash-scores');
-  const entries=Object.entries(qscores);
-  if(!entries.length){qs.innerHTML='<div class="emsg">Faça um simulado para ver sua pontuação</div>';}
-  else{qs.innerHTML=entries.map(([k,v])=>{const pct=Math.round(v.score/v.total*100);const bank=QB[k];const color=pct>=80?'#10b981':pct>=60?'#f59e0b':'#e24b4a';return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd)"><span>${bank?bank.icon:'📝'}</span><span style="flex:1;font-size:12px;color:var(--tx)">${k}</span><span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color}">${pct}%</span></div>`;}).join('');}
-  // Pomodoro dots
+  if(qs){const entries=Object.entries(qscores);qs.innerHTML=!entries.length?'<div class="emsg">Faça um simulado para ver sua pontuação</div>':entries.map(([k,v])=>{const pct=Math.round(v.score/v.total*100);const bank=QB[k];const color=pct>=80?'#10b981':pct>=60?'#f59e0b':'#e24b4a';return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd)"><span>${bank?bank.icon:'📝'}</span><span style="flex:1;font-size:12px;color:var(--tx)">${k}</span><span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${color}">${pct}%</span></div>`;}).join('');}
   renderPomDots();
 }
-
-/* ── STATS ── */
-function updateStats(){
-  const n=cntDone(),pct=Math.round(n/TOTAL*100);
-  document.getElementById('s-done').textContent=n;
-  document.getElementById('s-rest').textContent=TOTAL-n;
-  document.getElementById('s-horas').textContent=hrsDone()+'h';
-  document.getElementById('s-pct').textContent=pct+'%';
-  document.getElementById('pbfill').style.width=pct+'%';
-  document.getElementById('pbnums').textContent=n+'/'+TOTAL+' semanas';
-}
-
-/* ── SIDEBARS ── */
 function renderSidebars(){
   const sd=document.getElementById('sdtbar');sd.innerHTML='<div class="sdlb">Fases</div>';
   FASES.forEach(f=>{const nd=faseDone(f),tot=f.semanas.length,pct=Math.round(nd/tot*100);
@@ -1649,36 +1638,39 @@ function pomApplyConfig(){
 function pomRender(){
   const m=String(Math.floor(pomTime/60)).padStart(2,'0');
   const s=String(pomTime%60).padStart(2,'0');
-  document.getElementById('pom-time').textContent=m+':'+s;
+  setText('pom-time',m+':'+s);
   document.title=pomRunning?m+':'+s+' — SOC Tracker':'SOC Tracker';
   const labels={focus:'🎯 FOCO',short:'☕ PAUSA CURTA',long:'🌴 PAUSA LONGA'};
-  document.getElementById('pom-label').textContent=labels[pomPhase];
+  setText('pom-label',labels[pomPhase]);
 }
 function pomStart(){
   if(pomRunning)return;pomRunning=true;
-  document.getElementById('pom-start').style.display='none';
-  document.getElementById('pom-pause').style.display='flex';
+  setStyle('pom-start','display','none');
+  setStyle('pom-pause','display','flex');
   pomInterval=setInterval(()=>{
     pomTime--;pomRender();
-    if(pomTime<=0){pomDone++;pomRunning=false;clearInterval(pomInterval);
-      document.getElementById('pom-start').style.display='flex';
-      document.getElementById('pom-pause').style.display='none';
+    if(pomTime<=0){
+      pomDone++;pomRunning=false;clearInterval(pomInterval);
+      setStyle('pom-start','display','flex');
+      setStyle('pom-pause','display','none');
       if(pomPhase==='focus'){
-        pomSessions++;document.getElementById('pom-sessions').textContent=pomSessions+' sessões hoje';
+        pomSessions++;setText('pom-sessions',pomSessions+' sessões hoje');
         addActivity('⏱ Pomodoro concluído ('+pomSessions+'° sessão)');sched();
         pomPhase=pomDone%4===0?'long':'short';pomTime=POM_CONFIG[pomPhase];
         showToast('🎉 Pomodoro! Pausa merecida.');
       }else{pomPhase='focus';pomTime=POM_CONFIG.focus;showToast('💪 Hora de focar!');}
-      pomRender();renderPomDots();}
+      pomRender();renderPomDots();
+    }
   },1000);
 }
 function pomPause(){
   pomRunning=false;clearInterval(pomInterval);
-  document.getElementById('pom-start').style.display='flex';
-  document.getElementById('pom-pause').style.display='none';
+  setStyle('pom-start','display','flex');
+  setStyle('pom-pause','display','none');
 }
 function pomReset(){
-  pomPause();pomPhase='focus';pomTime=POM_CONFIG.focus;pomDone=0;pomRender();renderPomDots();document.title='SOC Tracker';
+  pomPause();pomPhase='focus';pomTime=POM_CONFIG.focus;pomDone=0;
+  pomRender();renderPomDots();document.title='SOC Tracker';
 }
 function pomSkip(){
   pomPause();
@@ -1686,14 +1678,13 @@ function pomSkip(){
   pomTime=POM_CONFIG[pomPhase];pomRender();renderPomDots();
 }
 function renderPomDots(){
-  const wrap=document.getElementById('pom-dots');
+  const wrap=document.getElementById('pom-dots');if(!wrap)return;
   wrap.innerHTML=[0,1,2,3].map(i=>{
     const cls=i<pomDone%4?'done':i===pomDone%4&&pomRunning&&pomPhase==='focus'?'active':'';
     return `<div class="pom-dot ${cls}"></div>`;
   }).join('');
-  document.getElementById('pom-sessions').textContent=pomSessions+' sessões hoje';
+  setText('pom-sessions',pomSessions+' sessões hoje');
 }
-
 /* ── RECURSOS ── */
 function renderRecursos(){
   const wrap=document.getElementById('res-sections');
