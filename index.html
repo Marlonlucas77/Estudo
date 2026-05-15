@@ -455,6 +455,21 @@ code{font-family:var(--mono);background:var(--sf2);border:1px solid var(--bd);bo
       </div>
       <div class="pom-dots" id="pom-dots"></div>
       <div class="pom-sessions" id="pom-sessions">0 sessões hoje</div>
+      <!-- Configuração de tempo -->
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap" id="pom-config">
+        <div style="text-align:center">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase;margin-bottom:4px">Foco (min)</div>
+          <input id="pom-inp-focus" type="number" min="1" max="90" value="25" style="width:60px;background:var(--sf2);border:1px solid var(--bd2);border-radius:var(--r);padding:7px 8px;font-family:var(--mono);font-size:14px;font-weight:700;color:var(--a);text-align:center;outline:none" onchange="pomApplyConfig()"/>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase;margin-bottom:4px">Pausa curta</div>
+          <input id="pom-inp-short" type="number" min="1" max="30" value="5" style="width:60px;background:var(--sf2);border:1px solid var(--bd2);border-radius:var(--r);padding:7px 8px;font-family:var(--mono);font-size:14px;font-weight:700;color:var(--a2);text-align:center;outline:none" onchange="pomApplyConfig()"/>
+        </div>
+        <div style="text-align:center">
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--tx3);text-transform:uppercase;margin-bottom:4px">Pausa longa</div>
+          <input id="pom-inp-long" type="number" min="1" max="60" value="15" style="width:60px;background:var(--sf2);border:1px solid var(--bd2);border-radius:var(--r);padding:7px 8px;font-family:var(--mono);font-size:14px;font-weight:700;color:var(--a3);text-align:center;outline:none" onchange="pomApplyConfig()"/>
+        </div>
+      </div>
     </div>
 
     <div class="sgrid">
@@ -1311,6 +1326,7 @@ function showPage(name){
   const pg=document.getElementById('page-'+name);if(pg)pg.classList.add('active');
   const tb=document.getElementById('tab-'+name);if(tb)tb.classList.add('active');
   const bn=document.getElementById('bnav-'+name);if(bn)bn.classList.add('active');
+  if(name==='trilha'){renderSidebars();renderFase();}
   if(name==='mapa')drawMap();
   if(name==='simulado')renderDecks();
   if(name==='dash')renderDash();
@@ -1618,6 +1634,18 @@ function backToDecks(){document.getElementById('qdecksarea').style.display='bloc
 
 /* ── POMODORO ── */
 const POM_CONFIG={focus:25*60,short:5*60,long:15*60};
+function pomApplyConfig(){
+  if(pomRunning){showToast('Pause o timer antes de alterar.');return;}
+  const f=parseInt(document.getElementById('pom-inp-focus').value)||25;
+  const s=parseInt(document.getElementById('pom-inp-short').value)||5;
+  const l=parseInt(document.getElementById('pom-inp-long').value)||15;
+  POM_CONFIG.focus=Math.max(1,Math.min(90,f))*60;
+  POM_CONFIG.short=Math.max(1,Math.min(30,s))*60;
+  POM_CONFIG.long=Math.max(1,Math.min(60,l))*60;
+  pomPhase='focus';pomTime=POM_CONFIG.focus;pomDone=0;
+  pomRender();renderPomDots();
+  showToast('⏱ Timer atualizado: '+f+'min foco / '+s+'min pausa');
+}
 function pomRender(){
   const m=String(Math.floor(pomTime/60)).padStart(2,'0');
   const s=String(pomTime%60).padStart(2,'0');
